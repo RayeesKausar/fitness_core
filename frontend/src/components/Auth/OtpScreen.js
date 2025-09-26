@@ -1,17 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TextField, Button, Stack, FormGroup } from "@mui/material";
 import { mockOtpVerify } from "../../services/Auth/AuthService";
+import { auth } from "../../firebase";
+import {RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { authoriseUser } from "./utils/userAuth";
+
+const isDev = true;
 
 const validatePhoneNumber = (value) => {
   // ✅ Indian number (10 digits, starts with 6-9)
+  if(isDev) {
+    return true;
+  }
   const regex = /^[6-9]\d{9}$/;
   return regex.test(value);
 };
 
 const validateOtp = (value) => {
-    const regex = /^\d{4}$/; // 4 digit OTP
+    const regex = /^\d{6}$/; // 4 digit OTP
     return regex.test(value);
 };
+
 
 export default function({
     phone, 
@@ -19,9 +28,7 @@ export default function({
     otp, 
     setOtp, 
     isPhoneValid, 
-    setIsPhoneValid, 
-    otpVerified, 
-    setOtpVerified, 
+    setIsPhoneValid,
     isOtpValid,
     setIsOtpValid,
     isOtpRequested, 
@@ -30,8 +37,19 @@ export default function({
     setIsOtpVerificationRequested,
     otpMessage,
     setOtpMessage,
-    onOtpVerified}) {
+    onOtpVerify}) {
 
+    // ✅ Initialize ReCAPTCHA once
+    useEffect(() => {
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+                size: "normal",
+                callback: () => console.log("ReCAPTCHA solved ✅"),
+                "expired-callback": () => console.log("ReCAPTCHA expired ❌"),
+            });
+        }
+        window.recaptchaVerifier.render();
+    }, []);
 
     function handlePhoneInput(evt) {
         evt.stopPropagation();
@@ -56,32 +74,43 @@ export default function({
         if(!isValid) {
             setOtpMessage("Otp is not valid");
         } else {
-            setOtpMessage("Enter 4-digit otp");
+            setOtpMessage("Enter 6-digit otp");
         }
         setIsOtpValid(isValid);
         
     }
 
-    function handleRequestOtp(evt) {
-        evt.stopPropagation();
-        if(!isOtpRequested) {
+    const requestOtp = async () => {
+        if (!isPhoneValid) {
+            setOtpMessage("Enter a valid phone number");
+            return;
+        }
+        try {
+            const appVerifier = window.recaptchaVerifier;
+            const confirmationResult = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
+            window.confirmationResult = confirmationResult;
             setIsOtpRequested(true);
+            setOtpMessage("OTP sent to your phone");
+        } catch (err) {
+            console.error(err);
+            setOtpMessage(err.message || "Failed to send OTP");
         }
-        if(isOtpRequested) {
-            setIsOtpVerificationRequested(true);
-            mockOtpVerify(phone, otp).then((result) => {
-                if(result.status === "Verified") {
-                    setOtpVerified(true);
-                    onOtpVerified();
-                }
-            }).catch((result) => {
-                if(result.status === "Failed") {
-                    setOtpVerified(false);
-                    setOtpMessage("Otp verification failed");
-                }
-            })
+    };
+
+    // ✅ Verify OTP
+    const verifyOtp = async () => {
+        if (!isOtpValid) {
+            setOtpMessage("Enter a valid 6-digit OTP");
+            return;
         }
-    }
+        try {
+            const result = await window.confirmationResult.confirm(otp);
+            setOtpMessage("Phone number verified ✅");
+            await onOtpVerify(result);
+        } catch (err) {
+            setOtpMessage(err.message || "Failed to verify OTP");
+        }
+    };
 
     return (
         <Stack component={FormGroup} spacing={4}>
@@ -106,16 +135,26 @@ export default function({
                     hidden={!isOtpRequested}
                 />
             }
-            <Button
-                type="submit"
-                color="primary"
+            <div id="recaptcha-container"></div>
+            {!isOtpRequested ? (
+                <Button
                 variant="contained"
-                size="large"
-                disabled={!isOtpValid || !isPhoneValid}
-                onClick={handleRequestOtp}
-            >
-                { isOtpRequested ? "Verify Otp" : "Request OTP"}
-            </Button>
+                color="primary"
+                disabled={!isPhoneValid}
+                onClick={requestOtp}
+                >
+                Request OTP
+                </Button>
+            ) : (
+                <Button
+                variant="contained"
+                color="secondary"
+                disabled={!isOtpValid}
+                onClick={verifyOtp}
+                >
+                Verify OTP
+                </Button>
+            )}
         </Stack>
     );
 }

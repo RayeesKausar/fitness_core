@@ -1,4 +1,4 @@
-package com.fittrack.fittrack_core.Controller;
+package com.fittrack.fittrack_core.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
