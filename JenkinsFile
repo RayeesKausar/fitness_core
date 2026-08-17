@@ -20,10 +20,6 @@ pipeline {
                     echo "===== PACKAGE-LOCK ====="
                     grep -n '"typescript"' package-lock.json | head -10 || true
                     grep -n '"yaml"' package-lock.json | tail -10 || true
-
-                    echo "===== NODE/NPM ====="
-                    node --version
-                    npm --version
                 '''
             }
         }
