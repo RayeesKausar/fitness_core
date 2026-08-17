@@ -22,6 +22,18 @@ pipeline {
                 '''
             }
         }
+
+        stage('Test') {
+            steps {
+                sh '''
+                    cd ./frontend
+                    test -f ./node_modules/index.html
+                '''
+                sh '''
+                    npm test -- --watchAll=false --coverage
+                '''
+            }
+        }
         
     }
 }
