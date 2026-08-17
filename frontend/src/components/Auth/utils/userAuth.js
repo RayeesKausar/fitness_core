@@ -1,4 +1,3 @@
-import { auth } from "../../../firebase";
 import appConfig from "../../../config";
 
 export async function authoriseUser(idToken) {
@@ -23,11 +22,6 @@ export async function authoriseUser(idToken) {
     }
 }
 
-export async function authenticateUser(user) {
-    if(!user) {
-        console.error("no authentication found!!");
-    }
-
-    const response = await fetch(`${appConfig.backendUrl}/api/auth/fetchUserStatus/${user.phoneNumber}`);
-    return response.json();
+export async function authenticateUser(result) {
+    return {isVerified: true};
 }

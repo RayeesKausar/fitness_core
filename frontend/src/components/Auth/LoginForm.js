@@ -12,14 +12,12 @@ export default function LoginForm () {
     const[isOtpValid, setIsOtpValid] = useState(true);
     const[otpVerified, setOtpVerified] = useState(false);
     const[isOtpRequested, setIsOtpRequested] = useState(false);
-    const[screen, setScreen] = useState(0);
-    const[isOtpVerificationRequested, setIsOtpVerificationRequested] = useState(false);
     const[otpMessage, setOtpMessage] = useState("Enter 4-digit otp");
     const [errorMessage, setErrorMessage] = useState("");
 
 
     async function handleOtpVerification(result) {
-        let response = await authenticateUser(result.user);
+        let response = await authenticateUser(result);
         if(response.errorObject && response.errorObject.error) {
             setErrorMessage(errorMessage || "some backend error");
             return;
@@ -28,6 +26,7 @@ export default function LoginForm () {
             //TODO handle the case
         } else {
             setOtpVerified(true);
+            console.log(otpVerified);
         }
     }
 

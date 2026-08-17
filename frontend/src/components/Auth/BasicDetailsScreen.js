@@ -53,11 +53,6 @@ export default function BasicDetailsScreen ({
         setEmail(evt.target.value);
     }
 
-    function handleEmailInput(evt) {
-        evt.stopPropagation();
-        setEmail(evt.target.value);
-    }
-
     return (
         <>
             <Stack spacing={3}>

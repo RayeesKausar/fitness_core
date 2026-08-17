@@ -1,9 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { TextField, Button, Stack, FormGroup } from "@mui/material";
-import { mockOtpVerify } from "../../services/Auth/AuthService";
-import { auth } from "../../firebase";
-import {RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { authoriseUser } from "./utils/userAuth";
 
 const isDev = true;
 
@@ -22,7 +18,7 @@ const validateOtp = (value) => {
 };
 
 
-export default function({
+export default function OtpScreen({
     phone, 
     setPhone, 
     otp, 
@@ -39,17 +35,6 @@ export default function({
     setOtpMessage,
     onOtpVerify}) {
 
-    // ✅ Initialize ReCAPTCHA once
-    useEffect(() => {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-                size: "normal",
-                callback: () => console.log("ReCAPTCHA solved ✅"),
-                "expired-callback": () => console.log("ReCAPTCHA expired ❌"),
-            });
-        }
-        window.recaptchaVerifier.render();
-    }, []);
 
     function handlePhoneInput(evt) {
         evt.stopPropagation();
@@ -86,9 +71,6 @@ export default function({
             return;
         }
         try {
-            const appVerifier = window.recaptchaVerifier;
-            const confirmationResult = await signInWithPhoneNumber(auth, `+91${phone}`, appVerifier);
-            window.confirmationResult = confirmationResult;
             setIsOtpRequested(true);
             setOtpMessage("OTP sent to your phone");
         } catch (err) {
@@ -104,9 +86,8 @@ export default function({
             return;
         }
         try {
-            const result = await window.confirmationResult.confirm(otp);
             setOtpMessage("Phone number verified ✅");
-            await onOtpVerify(result);
+            await onOtpVerify({isVerified: true});
         } catch (err) {
             setOtpMessage(err.message || "Failed to verify OTP");
         }
@@ -135,7 +116,6 @@ export default function({
                     hidden={!isOtpRequested}
                 />
             }
-            <div id="recaptcha-container"></div>
             {!isOtpRequested ? (
                 <Button
                 variant="contained"
