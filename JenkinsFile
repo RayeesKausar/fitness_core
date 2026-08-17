@@ -48,7 +48,7 @@ pipeline {
             steps {
                 sh '''
                     cd ./frontend
-                    test -f ./node_modules/index.html
+                    test -f ./build/index.html
                 '''
                 sh '''
                     npm test -- --watchAll=false --coverage
