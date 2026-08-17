@@ -11,6 +11,8 @@ pipeline {
                     git rev-parse HEAD
                     git log -1 --oneline
 
+                    cd ./frontend
+
                     echo "===== PACKAGE.JSON ====="
                     grep -n '"typescript"' package.json || true
                     grep -n '"react-router-dom"' package.json || true
