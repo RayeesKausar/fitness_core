@@ -49,8 +49,6 @@ pipeline {
                 sh '''
                     cd ./frontend
                     test -f ./build/index.html
-                '''
-                sh '''
                     npm test -- --watchAll=false --coverage
                 '''
             }
