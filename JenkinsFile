@@ -1,64 +1,42 @@
 pipeline {
     agent any
     stages {
-        stage('Debug Dependencies') {
-            steps {
-                sh '''
-                    echo "===== LOCATION ====="
-                    pwd
 
-                    echo "===== GIT ====="
-                    git rev-parse HEAD
-                    git log -1 --oneline
+        stage('build and Test') {
+            parallel {
+                stage('Build') {
+                    agent {
+                        docker {
+                            image 'node:24-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            cd ./frontend
+                            npm ci
+                            npm run build
+                        '''
+                    }
+                }
 
-                    cd ./frontend
-
-                    echo "===== PACKAGE.JSON ====="
-                    grep -n '"typescript"' package.json || true
-                    grep -n '"react-router-dom"' package.json || true
-
-                    echo "===== PACKAGE-LOCK ====="
-                    grep -n '"typescript"' package-lock.json | head -10 || true
-                    grep -n '"yaml"' package-lock.json | tail -10 || true
-                '''
-            }
-        }
-        stage('Build') {
-            agent {
-                docker {
-                    image 'node:24-alpine'
-                    reuseNode true
+                stage('Test') {
+                    agent {
+                        docker {
+                            image 'node:24-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                            cd ./frontend
+                            npm test -- --watchAll=false --coverage
+                        '''
+                    }
                 }
             }
-            steps {
-                sh '''
-                    ls -la
-                    cd ./frontend
-                    ls -la
-                    node --version
-                    npm --version
-                    npm ci
-                    npm run build
-                    ls -la
-                '''
-            }
         }
-
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:24-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    cd ./frontend
-                    test -f ./build/index.html
-                    npm test -- --watchAll=false --coverage
-                '''
-            }
-        }
+        
         
     }
 
