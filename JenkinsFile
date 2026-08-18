@@ -26,9 +26,23 @@ pipeline {
             }
             steps {
                 sh '''
-                    sleep 40
                     cd ./frontend
                     npm test -- --watchAll=false --coverage
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            agent {
+                docker {
+                    image 'node:24-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    npm install -g netlify-cli
+                    netlify --version
                 '''
             }
         }
