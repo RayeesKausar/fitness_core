@@ -29,6 +29,7 @@ pipeline {
                     }
                     steps {
                         sh '''
+                            sleep 40
                             cd ./frontend
                             npm test -- --watchAll=false --coverage
                         '''
