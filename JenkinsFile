@@ -1,44 +1,37 @@
 pipeline {
     agent any
     stages {
-
-        stage('build and Test') {
-            parallel {
-                stage('Build') {
-                    agent {
-                        docker {
-                            image 'node:24-alpine'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        sh '''
-                            cd ./frontend
-                            npm ci
-                            npm run build
-                        '''
-                    }
-                }
-
-                stage('Test') {
-                    agent {
-                        docker {
-                            image 'node:24-alpine'
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        sh '''
-                            sleep 40
-                            cd ./frontend
-                            npm test -- --watchAll=false --coverage
-                        '''
-                    }
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:24-alpine'
+                    reuseNode true
                 }
             }
+            steps {
+                sh '''
+                    cd ./frontend
+                    npm ci
+                    npm run build
+                '''
+            }
         }
-        
-        
+
+        stage('Test') {
+            agent {
+                docker {
+                    image 'node:24-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    sleep 40
+                    cd ./frontend
+                    npm test -- --watchAll=false --coverage
+                '''
+            }
+        }
     }
 
     post {
