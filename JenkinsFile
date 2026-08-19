@@ -37,6 +37,14 @@ pipeline {
             }
         }
 
+        stage('Approval') {
+            steps {
+                timeout(2) {
+                    input message: 'Ready to deploy?', ok: 'Approved'
+                }
+            }
+        }
+
         stage('Deploy') {
             agent {
                 docker {
